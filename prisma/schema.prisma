@@ -11,11 +11,25 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Entry {
-  id        String   @id @default(cuid())
-  title     String
-  summary   String
-  content   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+enum LearningStatus {
+  PLANNED
+  IN_PROGRESS
+  DONE
+}
+
+enum LearningDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+model LearningEntry {
+  id          String              @id @default(cuid())
+  title       String
+  description String?
+  status      LearningStatus      @default(PLANNED)
+  difficulty  LearningDifficulty?
+  tags        String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
 }
