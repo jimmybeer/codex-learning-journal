@@ -1,0 +1,32 @@
+{
+  "name": "codex-learning-journal",
+  "version": "1.0.0",
+  "description": "A guided walk through to learn project development with codex",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix apps/backend\" \"npm run dev --prefix apps/frontend\"",
+    "build": "npm run build --prefix apps/backend && npm run build --prefix apps/frontend",
+    "test": "npm run test --prefix apps/backend && npm run test --prefix apps/frontend"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jimmybeer/codex-learning-journal.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jimmybeer/codex-learning-journal/issues"
+  },
+  "homepage": "https://github.com/jimmybeer/codex-learning-journal#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "prisma": "^6.19.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.0"
+  }
+}
