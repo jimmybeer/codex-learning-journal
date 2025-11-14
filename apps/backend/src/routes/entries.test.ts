@@ -3,64 +3,69 @@ import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'vitest';
 import app from '../server';
 import prisma from '../prismaClient';
 
+afterAll(async () => {
+  await prisma.learningEntry.deleteMany();
+  await prisma.$disconnect();
+});
+
 beforeAll(async () => {
   await prisma.$connect();
 });
 
 beforeEach(async () => {
-  await prisma.entry.deleteMany();
+  await prisma.learningEntry.deleteMany();
 });
 
-afterAll(async () => {
-  await prisma.entry.deleteMany();
-  await prisma.$disconnect();
-});
-
-describe('Entries routes', () => {
-  it('creates an entry', async () => {
+describe('LearningEntry routes', () => {
+  it('creates an entry with optional fields', async () => {
     const response = await request(app).post('/api/entries').send({
       title: 'Day 1',
-      summary: 'Learned about Codex scaffolding',
-      content: 'Documenting the first entry.',
+      description: 'Set up Prisma',
+      status: 'IN_PROGRESS',
+      difficulty: 'MEDIUM',
+      tags: ['prisma', 'sqlite'],
     });
 
     expect(response.status).toBe(201);
     expect(response.body).toMatchObject({
       title: 'Day 1',
-      summary: 'Learned about Codex scaffolding',
-      content: 'Documenting the first entry.',
+      description: 'Set up Prisma',
+      status: 'IN_PROGRESS',
+      difficulty: 'MEDIUM',
+      tags: ['prisma', 'sqlite'],
     });
 
-    const dbEntry = await prisma.entry.findUnique({
+    const dbEntry = await prisma.learningEntry.findUnique({
       where: { id: response.body.id },
     });
     expect(dbEntry).not.toBeNull();
+    expect(dbEntry?.tags).toBe('prisma,sqlite');
   });
 
   it('rejects invalid payloads', async () => {
     const response = await request(app).post('/api/entries').send({
       title: '',
-      summary: '',
+      status: 'UNKNOWN',
     });
 
     expect(response.status).toBe(400);
     expect(response.body).toEqual({
-      message: 'title and summary are required',
+      message: 'title is required',
     });
   });
 
   it('lists entries sorted by newest first', async () => {
-    await prisma.entry.create({
+    await prisma.learningEntry.create({
       data: {
         title: 'Older',
-        summary: 'First summary',
+        status: 'DONE',
         createdAt: new Date('2024-01-01T00:00:00.000Z'),
       },
     });
-    await prisma.entry.create({
+    await prisma.learningEntry.create({
       data: {
         title: 'Newer',
-        summary: 'Second summary',
+        status: 'PLANNED',
         createdAt: new Date('2024-02-01T00:00:00.000Z'),
       },
     });
@@ -73,10 +78,11 @@ describe('Entries routes', () => {
   });
 
   it('updates and deletes entries', async () => {
-    const entry = await prisma.entry.create({
+    const entry = await prisma.learningEntry.create({
       data: {
         title: 'Draft',
-        summary: 'Needs edits',
+        status: 'PLANNED',
+        tags: 'initial',
       },
     });
 
@@ -84,17 +90,25 @@ describe('Entries routes', () => {
       .put(`/api/entries/${entry.id}`)
       .send({
         title: 'Draft updated',
-        summary: 'Now complete',
-        content: 'Finalized content',
+        status: 'DONE',
+        description: 'Now complete',
+        difficulty: 'HARD',
+        tags: 'final,tag',
       });
 
     expect(updated.status).toBe(200);
-    expect(updated.body.summary).toBe('Now complete');
+    expect(updated.body).toMatchObject({
+      title: 'Draft updated',
+      status: 'DONE',
+      description: 'Now complete',
+      difficulty: 'HARD',
+      tags: ['final', 'tag'],
+    });
 
     const remove = await request(app).delete(`/api/entries/${entry.id}`);
     expect(remove.status).toBe(204);
 
-    const deleted = await prisma.entry.findUnique({
+    const deleted = await prisma.learningEntry.findUnique({
       where: { id: entry.id },
     });
     expect(deleted).toBeNull();
