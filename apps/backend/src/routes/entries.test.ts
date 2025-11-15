@@ -16,36 +16,32 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-describe('Entries routes', () => {
-  it('creates an entry', async () => {
-    const response = await request(app).post('/api/entries').send({
+describe('LearningEntry API', () => {
+  it('creates an entry and can read it back', async () => {
+    const createResponse = await request(app).post('/api/entries').send({
       title: 'Day 1',
-      summary: 'Learned about Codex scaffolding',
-      content: 'Documenting the first entry.',
+      summary: 'Started the learning journal',
+      content: 'Documenting the first lesson learned.',
     });
 
-    expect(response.status).toBe(201);
-    expect(response.body).toMatchObject({
+    expect(createResponse.status).toBe(201);
+    expect(createResponse.body).toMatchObject({
       title: 'Day 1',
-      summary: 'Learned about Codex scaffolding',
-      content: 'Documenting the first entry.',
+      summary: 'Started the learning journal',
+      content: 'Documenting the first lesson learned.',
     });
 
-    const dbEntry = await prisma.entry.findUnique({
-      where: { id: response.body.id },
-    });
-    expect(dbEntry).not.toBeNull();
-  });
+    const entryId = createResponse.body.id;
+    expect(entryId).toBeDefined();
 
-  it('rejects invalid payloads', async () => {
-    const response = await request(app).post('/api/entries').send({
-      title: '',
-      summary: '',
-    });
+    const readResponse = await request(app).get(`/api/entries/${entryId}`);
 
-    expect(response.status).toBe(400);
-    expect(response.body).toEqual({
-      message: 'title and summary are required',
+    expect(readResponse.status).toBe(200);
+    expect(readResponse.body).toMatchObject({
+      id: entryId,
+      title: 'Day 1',
+      summary: 'Started the learning journal',
+      content: 'Documenting the first lesson learned.',
     });
   });
 
@@ -66,13 +62,14 @@ describe('Entries routes', () => {
     });
 
     const response = await request(app).get('/api/entries');
+
     expect(response.status).toBe(200);
     expect(response.body).toHaveLength(2);
     expect(response.body[0].title).toBe('Newer');
     expect(response.body[1].title).toBe('Older');
   });
 
-  it('updates and deletes entries', async () => {
+  it('updates an entry and returns the latest data', async () => {
     const entry = await prisma.entry.create({
       data: {
         title: 'Draft',
@@ -80,7 +77,7 @@ describe('Entries routes', () => {
       },
     });
 
-    const updated = await request(app)
+    const response = await request(app)
       .put(`/api/entries/${entry.id}`)
       .send({
         title: 'Draft updated',
@@ -88,15 +85,42 @@ describe('Entries routes', () => {
         content: 'Finalized content',
       });
 
-    expect(updated.status).toBe(200);
-    expect(updated.body.summary).toBe('Now complete');
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      id: entry.id,
+      title: 'Draft updated',
+      summary: 'Now complete',
+      content: 'Finalized content',
+    });
+  });
 
-    const remove = await request(app).delete(`/api/entries/${entry.id}`);
-    expect(remove.status).toBe(204);
+  it('deletes an entry and removes it from the database', async () => {
+    const entry = await prisma.entry.create({
+      data: {
+        title: 'To delete',
+        summary: 'Cleanup entry',
+      },
+    });
+
+    const response = await request(app).delete(`/api/entries/${entry.id}`);
+
+    expect(response.status).toBe(204);
 
     const deleted = await prisma.entry.findUnique({
       where: { id: entry.id },
     });
     expect(deleted).toBeNull();
+  });
+
+  it('rejects requests without a title', async () => {
+    const response = await request(app).post('/api/entries').send({
+      summary: 'Missing a title should fail',
+      content: 'This payload does not include the required title.',
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+      message: 'title and summary are required',
+    });
   });
 });
