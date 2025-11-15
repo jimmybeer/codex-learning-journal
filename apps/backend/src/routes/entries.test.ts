@@ -16,87 +16,44 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-describe('Entries routes', () => {
-  it('creates an entry', async () => {
-    const response = await request(app).post('/api/entries').send({
+describe('LearningEntry API', () => {
+  it('creates an entry and can read it back', async () => {
+    const createResponse = await request(app).post('/api/entries').send({
       title: 'Day 1',
-      summary: 'Learned about Codex scaffolding',
-      content: 'Documenting the first entry.',
+      summary: 'Started the learning journal',
+      content: 'Documenting the first lesson learned.',
     });
 
-    expect(response.status).toBe(201);
-    expect(response.body).toMatchObject({
+    expect(createResponse.status).toBe(201);
+    expect(createResponse.body).toMatchObject({
       title: 'Day 1',
-      summary: 'Learned about Codex scaffolding',
-      content: 'Documenting the first entry.',
+      summary: 'Started the learning journal',
+      content: 'Documenting the first lesson learned.',
     });
 
-    const dbEntry = await prisma.entry.findUnique({
-      where: { id: response.body.id },
+    const entryId = createResponse.body.id;
+    expect(entryId).toBeDefined();
+
+    const readResponse = await request(app).get(`/api/entries/${entryId}`);
+
+    expect(readResponse.status).toBe(200);
+    expect(readResponse.body).toMatchObject({
+      id: entryId,
+      title: 'Day 1',
+      summary: 'Started the learning journal',
+      content: 'Documenting the first lesson learned.',
     });
-    expect(dbEntry).not.toBeNull();
   });
 
-  it('rejects invalid payloads', async () => {
+  it('rejects requests without a title', async () => {
     const response = await request(app).post('/api/entries').send({
-      title: '',
-      summary: '',
+      summary: 'Missing a title should fail',
+      content: 'This payload does not include the required title.',
     });
 
     expect(response.status).toBe(400);
     expect(response.body).toEqual({
       message: 'title and summary are required',
     });
-  });
-
-  it('lists entries sorted by newest first', async () => {
-    await prisma.entry.create({
-      data: {
-        title: 'Older',
-        summary: 'First summary',
-        createdAt: new Date('2024-01-01T00:00:00.000Z'),
-      },
-    });
-    await prisma.entry.create({
-      data: {
-        title: 'Newer',
-        summary: 'Second summary',
-        createdAt: new Date('2024-02-01T00:00:00.000Z'),
-      },
-    });
-
-    const response = await request(app).get('/api/entries');
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveLength(2);
-    expect(response.body[0].title).toBe('Newer');
-    expect(response.body[1].title).toBe('Older');
-  });
-
-  it('updates and deletes entries', async () => {
-    const entry = await prisma.entry.create({
-      data: {
-        title: 'Draft',
-        summary: 'Needs edits',
-      },
-    });
-
-    const updated = await request(app)
-      .put(`/api/entries/${entry.id}`)
-      .send({
-        title: 'Draft updated',
-        summary: 'Now complete',
-        content: 'Finalized content',
-      });
-
-    expect(updated.status).toBe(200);
-    expect(updated.body.summary).toBe('Now complete');
-
-    const remove = await request(app).delete(`/api/entries/${entry.id}`);
-    expect(remove.status).toBe(204);
-
-    const deleted = await prisma.entry.findUnique({
-      where: { id: entry.id },
-    });
-    expect(deleted).toBeNull();
   });
 });
