@@ -53,7 +53,7 @@ const readErrorMessage = async (response: Response) => {
 };
 
 const fetchEntries = async (): Promise<Entry[]> => {
-  const response = await fetch(buildApiUrl('/api/entries'));
+  const response = await fetch(buildApiUrl('/entries'));
   if (!response.ok) {
     throw new Error(await readErrorMessage(response));
   }
@@ -61,7 +61,7 @@ const fetchEntries = async (): Promise<Entry[]> => {
 };
 
 const createEntry = async (values: EntryPayload) => {
-  const response = await fetch(buildApiUrl('/api/entries'), {
+  const response = await fetch(buildApiUrl('/entries'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(values),
@@ -75,7 +75,7 @@ const createEntry = async (values: EntryPayload) => {
 };
 
 const updateEntry = async ({ id, values }: UpdatePayload) => {
-  const response = await fetch(buildApiUrl(`/api/entries/${id}`), {
+  const response = await fetch(buildApiUrl(`/entries/${id}`), {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(values),
@@ -89,7 +89,7 @@ const updateEntry = async ({ id, values }: UpdatePayload) => {
 };
 
 const deleteEntry = async (id: string) => {
-  const response = await fetch(buildApiUrl(`/api/entries/${id}`), {
+  const response = await fetch(buildApiUrl(`/entries/${id}`), {
     method: 'DELETE',
   });
 
