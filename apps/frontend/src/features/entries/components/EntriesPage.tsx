@@ -31,10 +31,7 @@ const statusLabel = (status: EntryStatus) =>
   status.replace(/_/g, ' ');
 
 const apiBaseUrl = (() => {
-  const base = import.meta.env?.VITE_API_BASE_URL ?? '';
-  if (!base) {
-    return '';
-  }
+  const base = import.meta.env?.VITE_API_BASE_URL ?? '/api';
   return base.endsWith('/') ? base.slice(0, -1) : base;
 })();
 
