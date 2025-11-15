@@ -1,6 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
 import Layout from './components/Layout';
-import { EntriesList } from './features/entries';
+import { EntriesPage } from './features/entries';
 
 export const router = createBrowserRouter([
   {
@@ -9,15 +9,11 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <EntriesList />,
+        element: <EntriesPage />,
       },
       {
         path: 'entries/new',
-        element: (
-          <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-sm text-slate-500">
-            Entry form scaffold coming soon.
-          </div>
-        ),
+        element: <EntriesPage />,
       },
     ],
   },

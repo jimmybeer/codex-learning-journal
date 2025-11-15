@@ -1,1 +1,1 @@
-export { default as EntriesList } from './components/EntriesList';
+export { default as EntriesPage } from './components/EntriesPage';
