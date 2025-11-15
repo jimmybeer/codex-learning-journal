@@ -7,8 +7,8 @@
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "test": "cross-env DATABASE_URL=\"file:./prisma/test.db\" prisma migrate deploy --schema ../../prisma/schema.prisma && cross-env DATABASE_URL=\"file:./prisma/test.db\" vitest run",
-    "test:watch": "cross-env DATABASE_URL=\"file:./prisma/test.db\" vitest watch"
+    "test": "cross-env DATABASE_URL=\"file:./prisma/test.db\" prisma generate --schema ../../prisma/schema.prisma && cross-env DATABASE_URL=\"file:./prisma/test.db\" prisma migrate deploy --schema ../../prisma/schema.prisma && cross-env DATABASE_URL=\"file:./prisma/test.db\" vitest run",
+    "test:watch": "cross-env DATABASE_URL=\"file:./prisma/test.db\" prisma generate --schema ../../prisma/schema.prisma && cross-env DATABASE_URL=\"file:./prisma/test.db\" vitest watch"
   },
   "keywords": [],
   "author": "",
